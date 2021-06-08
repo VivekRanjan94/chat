@@ -34,7 +34,7 @@ export default function Signup() {
       })
       .catch((e) => {
         console.warn(e)
-        setError('Failed to create account')
+        setError('Failed to log in')
         setIsLoading(false)
       })
   }
@@ -51,7 +51,7 @@ export default function Signup() {
             <label>Password</label>
             <input type='password' required ref={passwordRef} />
             <button disabled={isLoading} type='submit' className='btn sign-up'>
-              Sign Up
+              login
             </button>
           </form>
         </div>

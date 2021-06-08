@@ -7,6 +7,17 @@ const bcrypt = require('bcrypt')
 const session = require('express-session')
 const app = express()
 const User = require('./user')
+const http = require('http')
+
+const server = http.createServer(app)
+const socketio = require('socket.io')
+const io = socketio(server, {
+  cors: {
+    origin: 'http://localhost:3000',
+  },
+})
+
+// var MongoStore = require('connect-mongo')(session)
 //----------------------------------------- END OF IMPORTS---------------------------------------------------
 mongoose.connect(
   'mongodb+srv://vivekranjan:z&c$YXFpEqGp5M8q@cluster0.23ysu.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
@@ -31,8 +42,9 @@ app.use(
 app.use(
   session({
     secret: 'secretcode',
-    resave: true,
+    resave: false,
     saveUninitialized: true,
+    // store: new MongoStore({ mongooseConnection: mongoose.connection }),
   })
 )
 app.use(cookieParser('secretcode'))
@@ -50,8 +62,8 @@ app.post('/login', (req, res, next) => {
     else {
       req.logIn(user, (err) => {
         if (err) throw err
-        res.send('Successfully Authenticated')
-        console.log(req.user)
+        res.send(user)
+        // console.log(req.user)
       })
     }
   })(req, res, next)
@@ -73,10 +85,23 @@ app.post('/register', (req, res) => {
   })
 })
 app.get('/user', (req, res) => {
-  res.send(req.user) // The req.user stores the entire user that has been authenticated inside of it.
+  User.findOne({ _id: req.query.id }, (err, user) => {
+    if (err) {
+      throw err
+    }
+    res.status(200).send(user)
+  })
+  // The req.user stores the entire user that has been authenticated inside of it.
 })
 //----------------------------------------- END OF ROUTES---------------------------------------------------
+
+io.on('connection', (socket) => {
+  const id = socket.handshake.query.id
+
+  socket.join(id)
+})
+
 //Start Server
-app.listen(5000, () => {
+server.listen(5000, () => {
   console.log('Server Has Started on port 5000...')
 })
